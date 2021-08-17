@@ -12,13 +12,16 @@ pub use stm32f4::stm32f407 as stm32pac;
 pub use stm32f4::stm32f412 as stm32pac;
 #[cfg(feature = "stm32f429")]
 pub use stm32f4::stm32f429 as stm32pac;
-#[cfg(feature = "stm32f469")]
-pub use stm32f4::stm32f469 as stm32pac;
 #[cfg(feature = "stm32f446")]
 pub use stm32f4::stm32f446 as stm32pac;
+#[cfg(feature = "stm32f469")]
+pub use stm32f4::stm32f469 as stm32pac;
 
 #[cfg(feature = "efm32gg11b_any")]
 pub use efm32gg11b as efm32pac;
+
+#[cfg(feature = "nrf52840")]
+pub use nrf52840_pac as nrf52840pac;
 
 #[macro_use]
 pub mod utilities {

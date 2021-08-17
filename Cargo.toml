@@ -27,6 +27,7 @@ stm32_any = ["cortex_m_any"]
 cortex_m_any = []
 wgm160p = ["efm32gg11b_any"]
 efm32gg11b_any = ["efm32gg11b", "cortex_m_any"]
+nrf52840 = ["nrf52840-pac", "cortex_m_any"]
 
 defmt-default = []
 defmt-trace = []
@@ -63,6 +64,10 @@ default-features = false
 optional = true
 version = "0.12.1"
 features = ["rt"]
+
+[dependencies.nrf52840-pac]
+optional = true
+version = "0.9.0"
 
 [dependencies.efm32gg11b]
 optional = true
