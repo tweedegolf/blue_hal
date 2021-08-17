@@ -66,8 +66,6 @@ pub enum Block {
 #[non_exhaustive]
 struct Sector(u8);
 
-const UNLOCK_KEYS: [u32; 2] = [0x45670123, 0xCDEF89AB];
-
 #[cfg(feature = "nrf52840")]
 const SECTOR_NUMBER: usize = 256;
 
@@ -88,7 +86,8 @@ impl MemoryMap {
     fn sectors() -> impl ExactSizeIterator<Item = Sector>
            + DoubleEndedIterator<Item = Sector>
            + Iterator<Item = Sector> {
-        (std::u8::MIN..std::u8::MAX).map(Sector)
+        // All sectors (pages) from 0 to 256
+        (0x00..(SECTOR_NUMBER as u8)).map(Sector)
     }
 }
 
@@ -225,9 +224,6 @@ impl NrfFlash {
 
         block!(self.unlock())?;
 
-        // TODO what does this do?
-        // self.flash.cr.modify(|_, w| w.pg().set_bit());
-
         let base_address = address.0 as *mut u32;
         for (index, word) in words.enumerate() {
             // NOTE(Safety): Writing to a memory-mapped flash
@@ -344,7 +340,7 @@ impl ReadWrite for NrfFlash {
     }
 
     fn label() -> &'static str {
-        "stm32f4 flash (Internal)"
+        "nrf52840 flash (Internal)"
     }
 }
 
@@ -354,36 +350,15 @@ mod test {
 
     #[test]
     fn ranges_overlap_sectors_correctly() {
-        let sector = Sector::new(Block::Reserved, Address(10), 10usize);
-        assert!(Range(Address(10), Address(20)).overlaps(&sector));
-        assert!(Range(Address(5), Address(15)).overlaps(&sector));
-        assert!(Range(Address(15), Address(25)).overlaps(&sector));
-        assert!(Range(Address(5), Address(25)).overlaps(&sector));
-        assert!(Range(Address(12), Address(18)).overlaps(&sector));
+        let sector = Sector::new(1);
+
+        assert!(Range(Address(4096), Address(8192)).overlaps(&sector));
+        assert!(Range(Address(4090), Address(4106)).overlaps(&sector));
+        assert!(Range(Address(8190), Address(8196)).overlaps(&sector));
+        assert!(Range(Address(0), Address(8196)).overlaps(&sector));
+        assert!(Range(Address(4098), Address(8190)).overlaps(&sector));
 
         assert!(!Range(Address(0), Address(5)).overlaps(&sector));
-        assert!(!Range(Address(20), Address(25)).overlaps(&sector));
+        assert!(!Range(Address(8192), Address(8198)).overlaps(&sector));
     }
-
-    //    #[test]
-    //    fn ranges_span_the_correct_sectors() {
-    //        let range = Range(Address(0x0801_1234), Address(0x0804_5678));
-    //        let expected_sectors = &MEMORY_MAP.sectors[4..7];
-    //
-    //        assert_eq!(expected_sectors, range.span());
-    //    }
-    //
-    //    #[test]
-    //    fn map_shows_correct_writable_range() {
-    //        let (start, end) = (MemoryMap::writable_start(), MemoryMap::writable_end());
-    //        assert_eq!(start, MEMORY_MAP.sectors[4].start());
-    //        assert_eq!(end, MEMORY_MAP.sectors[11].end());
-    //    }
-    //
-    //    #[test]
-    //    fn ranges_are_correctly_marked_writable() {
-    //        let (start, size) = (Address(0x0801_0008), 48usize);
-    //        let range = Range(start, Address(start.0 + size as u32));
-    //        assert!(range.is_writable());
-    //    }
 }
